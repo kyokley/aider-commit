@@ -17,14 +17,10 @@
   # services.postgres.enable = true;
 
   # https://devenv.sh/scripts/
-  scripts.hello.exec = ''
-    echo hello from $GREET
-  '';
+  scripts.prepare-commit-msg.exec = ./prepare-commit-msg;
 
   # https://devenv.sh/basics/
   enterShell = ''
-    hello         # Run scripts directly
-    git --version # Use packages
   '';
 
   # https://devenv.sh/tasks/
@@ -40,7 +36,14 @@
   '';
 
   # https://devenv.sh/git-hooks/
-  # git-hooks.hooks.shellcheck.enable = true;
+  git-hooks.hooks = {
+    auto-commit-message = {
+      enable = true;
+      name = "Auto commit message";
+      entry = "prepare-commit-msg";
+      stages = ["prepare-commit-msg"];
+    };
+  };
 
   # See full reference at https://devenv.sh/reference/options/
 }
