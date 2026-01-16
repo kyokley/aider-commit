@@ -16,6 +16,7 @@ fi
 : ${AIDER_COMMIT_MODEL:=ollama_chat/gpt-oss}
 : ${_AIDER_COMMIT_DIFF_FILE:=diff_file}
 : ${_AIDER_COMMIT_SUMMARY_FILE:=summary_file}
+: ${_AIDER_COMMIT_TIMEOUT:=300}
 
 # Create temp directory to isolate the AI
 tmp_dir=$(mktemp -d)
@@ -39,7 +40,7 @@ _AIDER_COMMIT_PROMPT="
     Write the summary table to the file ${_AIDER_COMMIT_SUMMARY_FILE}
 "
 
-timeout 300 ${AIDER_COMMIT_CMD} --model ${AIDER_COMMIT_MODEL} --message "${_AIDER_COMMIT_PROMPT}" ${_AIDER_COMMIT_DIFF_FILE}
+timeout ${_AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --model ${AIDER_COMMIT_MODEL} --message "${_AIDER_COMMIT_PROMPT}" ${_AIDER_COMMIT_DIFF_FILE}
 
 cd -
 
