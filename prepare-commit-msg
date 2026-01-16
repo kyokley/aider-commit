@@ -2,6 +2,16 @@
 
 set -ex
 
+# Exit immediately for merge commits
+if [ -n "$2" ] && [ "$2" = "merge" ]; then
+    exit 0
+fi
+
+# Exit immediately if there are no staged changes
+if git diff --staged --quiet; then
+    exit 0
+fi
+
 : ${AIDER_COMMIT_CMD:=aider}
 : ${AIDER_COMMIT_MODEL:=ollama_chat/gpt-oss}
 : ${_AIDER_COMMIT_DIFF_FILE:=diff_file}
