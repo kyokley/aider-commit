@@ -11,6 +11,7 @@
     git-hooks.hooks = {
       auto-commit-message = {
         name = "Auto commit message";
+        description = "Automatically generate commit messages with AI";
         entry = "auto-commit-msg";
         stages = ["prepare-commit-msg"];
       };
