@@ -1,9 +1,13 @@
 {
   pkgs,
   config,
+  inputs,
   ...
 }: {
+  disabledModules = [ "${inputs.devenv}/integrations/secretspec.nix" ];
+
   config = {
+
     # https://devenv.sh/scripts/
     scripts.auto-commit-msg.exec = ./prepare-commit-msg;
 
