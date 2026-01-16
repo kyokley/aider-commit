@@ -2,13 +2,13 @@
 
 set -ex
 
-# Exit immediately for merge commits
-if [ -n "$2" ] && [ "$2" = "merge" ] || git rev-parse --quiet --verify MERGE_HEAD >/dev/null 2>&1; then
+# Exit immediately if there are no staged changes
+if ! git diff --cached --name-only > /dev/null 2>&1; then
     exit 0
 fi
 
-# Exit immediately if there are no staged changes
-if git diff --staged --quiet; then
+# Exit immediately for merge commits
+if [ -n "$2" ] && [ "$2" = "merge" ] || git rev-parse --quiet --verify MERGE_HEAD >/dev/null 2>&1; then
     exit 0
 fi
 
