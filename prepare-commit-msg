@@ -40,7 +40,9 @@ _AIDER_COMMIT_PROMPT="
     Write the summary table to the file ${_AIDER_COMMIT_SUMMARY_FILE}
 "
 
-timeout ${_AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --model ${AIDER_COMMIT_MODEL} --message "${_AIDER_COMMIT_PROMPT}" ${_AIDER_COMMIT_DIFF_FILE}
+if ! timeout ${_AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --model ${AIDER_COMMIT_MODEL} --message "${_AIDER_COMMIT_PROMPT}" ${_AIDER_COMMIT_DIFF_FILE}; then
+    echo "# Auto commit message generator has timed out" > "${_AIDER_COMMIT_SUMMARY_FILE}"
+fi
 
 cd -
 
