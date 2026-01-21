@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 # Exit immediately if there are no staged changes
 if ! git diff --cached --name-only > /dev/null 2>&1; then
@@ -14,26 +14,27 @@ fi
 
 : ${AIDER_COMMIT_CMD:=aider}
 : ${AIDER_COMMIT_MODEL:=ollama_chat/gpt-oss}
-: ${_AIDER_COMMIT_DIFF_FILE:=diff_file}
-: ${_AIDER_COMMIT_SUMMARY_FILE:=summary_file}
-: ${_AIDER_COMMIT_TIMEOUT:=300}
+: ${AIDER_COMMIT_DIFF_FILE:=diff_file}
+: ${AIDER_COMMIT_SUMMARY_FILE:=summary_file}
+: ${AIDER_COMMIT_TIMEOUT:=300}
 
 # Create temp directory to isolate the AI
 tmp_dir=$(mktemp -d)
 git init $tmp_dir >/dev/null 2>&1
-git diff --staged > "$tmp_dir/$_AIDER_COMMIT_DIFF_FILE"
+git diff --staged > "$tmp_dir/$AIDER_COMMIT_DIFF_FILE"
 
 branch=$(git rev-parse --abbrev-ref HEAD)
 
 cd $tmp_dir >/dev/null 2>&1
 
-_AIDER_COMMIT_PROMPT="
+AIDER_COMMIT_PROMPT="
   DO NOT MODIFY ANY EXISTING FILES.
+  DO NOT MODIFY prepare-commit-msg!
   DO NOT REPEAT THE REQUEST.
   DO NOT SUMMARIZE WHAT YOU HAVE DONE.
 
   You are an expert programmer writing a concise commit summary for code changes from running 'git diff'.
-  The content for the diffs is in the file '${_AIDER_COMMIT_DIFF_FILE}'.
+  The content for the diffs is in the file '${AIDER_COMMIT_DIFF_FILE}'.
   The name of the current branch is ${branch}.
   Create a brief one line summary of all diffs.
   If the branch is not 'main' or 'master' use the form 'branch: summary' otherwise just write the summary line.
@@ -42,16 +43,16 @@ _AIDER_COMMIT_PROMPT="
   Focus on high level actions, avoiding repetition of file summaries.  Return no more than five bullet points.
   Leave an empty line between the single line summary and the rest of the bullet points.
   Only output the summary table without repeating what was requested.
-  Write summary to a file named '${_AIDER_COMMIT_SUMMARY_FILE}'.
+  Write summary to a file named '${AIDER_COMMIT_SUMMARY_FILE}'.
 "
 
-if ! timeout ${_AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --model ${AIDER_COMMIT_MODEL} --message "${_AIDER_COMMIT_PROMPT}" ${_AIDER_COMMIT_DIFF_FILE} ${_AIDER_COMMIT_SUMMARY_FILE}; then
-    echo "# Auto commit message generator has timed out" > "${_AIDER_COMMIT_SUMMARY_FILE}"
+if ! timeout ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --model ${AIDER_COMMIT_MODEL} --message "${AIDER_COMMIT_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE}; then
+    echo "# Auto commit message generator has timed out" > "${AIDER_COMMIT_SUMMARY_FILE}"
 fi
 
 cd - >/dev/null 2>&1
 
 tmp_output=$(mktemp)
-cat "$tmp_dir/${_AIDER_COMMIT_SUMMARY_FILE}" "$1" > "$tmp_output" && mv "$tmp_output" "$1"
+cat "$tmp_dir/${AIDER_COMMIT_SUMMARY_FILE}" "$1" > "$tmp_output" && mv "$tmp_output" "$1"
 
 rm -r "$tmp_dir"
