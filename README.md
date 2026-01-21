@@ -2,7 +2,7 @@
 Use Aider to automatically generate git commit messages
 ## Installation
 ### A. Directly in .git/hooks
-Copy prepare-commit-msg to .git/hooks in whatever git repo you'd like to use the plugin in. Be sure to make the script executable with `chmod +x prepare-commit-msg`
+Copy `prepare-commit-msg` to .git/hooks in whatever git repo you'd like to use the plugin in. Be sure to make the script executable with `chmod +x prepare-commit-msg`
 ### B. devenv.sh
 1. Add aider-commit module to devenv.yaml as an input and import. The file should look like the following:
 ```
