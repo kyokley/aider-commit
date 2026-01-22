@@ -13,7 +13,7 @@ if [ -n "$2" ] && [ "$2" = "merge" ] || git rev-parse --quiet --verify MERGE_HEA
 fi
 
 # Exit immediately if a commit message already exists
-if [ ! -s "$1" ] && ! grep -v '^#' "$1" | grep -v "^\s*$" > /dev/null 2>&1; then
+if [ -s "$1" ] && ! grep -v '^#' "$1" | grep -v "^\s*$" > /dev/null 2>&1; then
     exit 0
 fi
 

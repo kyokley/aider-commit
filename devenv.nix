@@ -8,6 +8,7 @@
   scripts = {
     auto-commit-msg.exec = ./prepare-commit-msg;
     gitac.exec = ''
+     set -x
      temp_commit_file=$(mktemp)
      touch ''${temp_commit_file}
      auto-commit-msg "''${temp_commit_file}" message
