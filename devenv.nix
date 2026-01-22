@@ -8,7 +8,11 @@
   scripts = {
     auto-commit-msg.exec = ./prepare-commit-msg;
     gitac.exec = ''
-     set -x
+     # Exit immediately if there are no staged changes
+     if ! git diff --cached --name-only > /dev/null 2>&1; then
+         exit 0
+     fi
+
      temp_commit_file=$(mktemp)
      touch ''${temp_commit_file}
      auto-commit-msg "''${temp_commit_file}" message
