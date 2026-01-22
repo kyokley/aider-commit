@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 # Exit immediately if there are no staged changes
 if ! git diff --cached --name-only > /dev/null 2>&1; then
@@ -9,6 +9,11 @@ fi
 
 # Exit immediately for merge commits
 if [ -n "$2" ] && [ "$2" = "merge" ] || git rev-parse --quiet --verify MERGE_HEAD >/dev/null 2>&1; then
+    exit 0
+fi
+
+# Exit immediately if a commit message already exists
+if [ ! -s "$1" ] && ! grep -v '^#' "$1" | grep -v "^\s*$" > /dev/null 2>&1; then
     exit 0
 fi
 

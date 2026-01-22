@@ -9,6 +9,7 @@
     auto-commit-msg.exec = ./prepare-commit-msg;
     gitac.exec = ''
      temp_commit_file=$(mktemp)
+     touch ''${temp_commit_file}
      auto-commit-msg "''${temp_commit_file}" message
      git commit -F "''${temp_commit_file}"
      cat "''${temp_commit_file}"
