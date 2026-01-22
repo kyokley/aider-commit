@@ -59,7 +59,7 @@ AIDER_COMMIT_PROMPT="
 show_spinner() {
     local spin_chars="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
     local i=0
-    echo "Generating commit message"
+    printf "Generating commit message"
     while kill -0 $1 2>/dev/null; do
         printf "\rGenerating commit message %s" "${spin_chars:$((i % ${#spin_chars})):1}"
         i=$((i + 1))
