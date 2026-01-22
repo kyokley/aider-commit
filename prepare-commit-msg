@@ -2,16 +2,15 @@
 
 set -e
 
-echo "$1"
-cat "$1"
-
 # Exit immediately if there are no staged changes
-if ! git diff --cached --name-only > /dev/null 2>&1; then
+if [[ ! $(git diff --cached --name-only) ]]; then
+    echo "Nothing to commit"
     exit 0
 fi
 
 # Exit immediately for merge commits
 if [ -n "$2" ] && [ "$2" = "merge" ] || git rev-parse --quiet --verify MERGE_HEAD >/dev/null 2>&1; then
+    echo "Not a regular commit"
     exit 0
 fi
 
@@ -56,8 +55,32 @@ AIDER_COMMIT_PROMPT="
   Write summary to a file named '${AIDER_COMMIT_SUMMARY_FILE}'.
 "
 
-if ! timeout ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --yes --no-git --model ${AIDER_COMMIT_MODEL} --message "${AIDER_COMMIT_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE}; then
-    echo "# Auto commit message generator has timed out" > "${AIDER_COMMIT_SUMMARY_FILE}"
+# Function to display braille spinner
+show_spinner() {
+    local spin_chars="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+    local i=0
+    while kill -0 $1 2>/dev/null; do
+        printf "\r%s" "${spin_chars:$((i % ${#spin_chars})):1}"
+        i=$((i + 1))
+        sleep 0.1
+    done
+    printf "\r"
+}
+
+# Run aider command with spinner
+timeout --preserve-status ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --yes --no-git --model ${AIDER_COMMIT_MODEL} --message "${AIDER_COMMIT_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE} >/dev/null 2>&1 &
+
+# Get the PID of the last background process
+AIDER_PID=$!
+
+# Show spinner while AIDER is running
+show_spinner $AIDER_PID
+
+wait $AIDER_PID
+AIDER_STATUS=$?
+
+if [ $AIDER_STATUS -ne 0 ]; then
+    exit $AIDER_STATUS
 fi
 
 cd - >/dev/null 2>&1

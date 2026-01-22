@@ -9,7 +9,8 @@
     auto-commit-msg.exec = ./prepare-commit-msg;
     gitac.exec = ''
      # Exit immediately if there are no staged changes
-     if ! git diff --cached --name-only > /dev/null 2>&1; then
+     if [[ ! $(git diff --cached --name-only) ]]; then
+         echo "Nothing to commit"
          exit 0
      fi
 
