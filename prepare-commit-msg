@@ -46,7 +46,7 @@ AIDER_COMMIT_PROMPT="
   Write summary to a file named '${AIDER_COMMIT_SUMMARY_FILE}'.
 "
 
-if ! timeout ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --model ${AIDER_COMMIT_MODEL} --message "${AIDER_COMMIT_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE}; then
+if ! timeout ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --yes --no-git --model ${AIDER_COMMIT_MODEL} --message "${AIDER_COMMIT_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE}; then
     echo "# Auto commit message generator has timed out" > "${AIDER_COMMIT_SUMMARY_FILE}"
 fi
 
