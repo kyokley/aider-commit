@@ -80,9 +80,6 @@ show_spinner $AIDER_PID
 wait $AIDER_PID
 AIDER_STATUS=$?
 
-cat ${AIDER_COMMIT_SUMMARY_FILE}
-
-
 if [ $AIDER_STATUS -ne 0 ]; then
     exit $AIDER_STATUS
 fi
