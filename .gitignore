@@ -9,3 +9,5 @@ devenv.local.yaml
 # pre-commit
 .pre-commit-config.yaml
 .aider*
+
+test_data
