@@ -12,37 +12,34 @@
   scripts = {
     auto-commit-msg.exec = ./prepare-commit-msg;
     gitac.exec = ''
-     # Parse command line arguments
-     add_all=false
-     while [[ $# -gt 0 ]]; do
-         case $1 in
-             -a|--all)
-                 add_all=true
-                 shift
-                 ;;
-             *)
-                 shift
-                 ;;
-         esac
-     done
+      # Parse command line arguments
+      add_all=false
+      while [[ $# -gt 0 ]]; do
+          case $1 in
+              -a|--all)
+                  add_all=true
+                  shift
+                  ;;
+              *)
+                  shift
+                  ;;
+          esac
+      done
 
-     # Run git add if --all flag is provided
-     if [[ "$add_all" == true ]]; then
-         git add -u
-     fi
+      # Run git add if --all flag is provided
+      if [[ "$add_all" == true ]]; then
+          git add -u
+      fi
 
-     # Exit immediately if there are no staged changes
-     if [[ ! $(git diff --cached --name-only) ]]; then
-         echo "Nothing to commit"
-         exit 0
-     fi
+      temp_commit_file=$(mktemp)
+      touch ''${temp_commit_file}
 
-     temp_commit_file=$(mktemp)
-     touch ''${temp_commit_file}
-     auto-commit-msg "''${temp_commit_file}" message
-     git commit -F "''${temp_commit_file}"
+      if auto-commit-msg "''${temp_commit_file}" message
+      then
+        git commit -F "''${temp_commit_file}"
+      fi
 
-     rm -f "''${temp_commit_file}"
+      rm -f "''${temp_commit_file}"
     '';
   };
 
