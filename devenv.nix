@@ -4,6 +4,10 @@
   inputs,
   ...
 }: {
+  imports = [./test.nix];
+
+  packages = [ pkgs.git ];
+
   # https://devenv.sh/scripts/
   scripts = {
     auto-commit-msg.exec = ./prepare-commit-msg;
@@ -21,6 +25,82 @@
      cat "''${temp_commit_file}"
      rm -f "''${temp_commit_file}"
     '';
+  };
+
+  services = {
+    wiremock = {
+      enable = true;
+      verbose = true;
+      mappings = [
+        {
+          request = {
+            method = "GET";
+            url = "/api/generate";
+          };
+          response = {
+            jsonBody = {
+              "model" = "<string>";
+              "created_at" = "<string>";
+              "response" = "mock response";
+              "thinking" = "<string>";
+              "done" = true;
+              "done_reason" = "<string>";
+              "total_duration" = 123;
+              "load_duration" = 123;
+              "prompt_eval_count" = 123;
+              "prompt_eval_duration" = 123;
+              "eval_count" = 123;
+              "eval_duration" = 123;
+              "logprobs" = [
+                {
+                  "token" = "<string>";
+                  "logprob" = 123;
+                  "bytes" = [
+                    123
+                  ];
+                  "top_logprobs" = [
+                    {
+                      "token" = "<string>";
+                      "logprob" = 123;
+                      "bytes" = [
+                        123
+                      ];
+                    }
+                  ];
+                }
+              ];
+            };
+            status = 200;
+          };
+        }
+        {
+          request = {
+            method = "POST";
+            url = "/api/show";
+          };
+          response = {
+            jsonBody = {
+            };
+            status = 200;
+          };
+        }
+        {
+          request = {
+            method = "POST";
+            url = "/api/chat";
+          };
+          response = {
+            jsonBody = {
+              message = {
+                content = "mock response";
+              };
+              done = true;
+            };
+            status = 200;
+          };
+        }
+      ];
+    };
   };
 
   # https://devenv.sh/git-hooks/
