@@ -3,13 +3,22 @@
 set -e
 
 # Exit immediately if there are no staged changes
-if ! git diff --cached --name-only > /dev/null 2>&1; then
-    exit 0
+if [[ ! $(git diff --cached --name-only) ]]; then
+    echo "Nothing to commit"
+    exit 1
 fi
 
 # Exit immediately for merge commits
 if [ -n "$2" ] && [ "$2" = "merge" ] || git rev-parse --quiet --verify MERGE_HEAD >/dev/null 2>&1; then
-    exit 0
+    echo "Not a regular commit"
+    exit 1
+fi
+
+# Exit immediately if a commit message already exists
+if [ -s "$1" ]; then
+    if [[ $(grep -v '^#' "$1" | grep -v "^\s*$") ]]; then
+        exit 1
+    fi
 fi
 
 : ${AIDER_COMMIT_CMD:=aider}
@@ -46,8 +55,35 @@ AIDER_COMMIT_PROMPT="
   Write summary to a file named '${AIDER_COMMIT_SUMMARY_FILE}'.
 "
 
-if ! timeout ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --model ${AIDER_COMMIT_MODEL} --message "${AIDER_COMMIT_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE}; then
-    echo "# Auto commit message generator has timed out" > "${AIDER_COMMIT_SUMMARY_FILE}"
+# Function to display braille spinner
+show_spinner() {
+    local spin_chars="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+    local i=0
+    printf "Generating commit message"
+    while kill -0 $1 2>/dev/null; do
+        printf "\rGenerating commit message %s " "${spin_chars:$((i % ${#spin_chars})):1}"
+        i=$((i + 1))
+        sleep 0.1
+    done
+    printf "\rCommit message generation complete! 🎉"
+    echo
+    echo
+}
+
+# Run aider command with spinner
+timeout --preserve-status ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --yes --no-git --model ${AIDER_COMMIT_MODEL} --message "${AIDER_COMMIT_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE} >/dev/null 2>&1 &
+
+# Get the PID of the last background process
+AIDER_PID=$!
+
+# Show spinner while AIDER is running
+show_spinner $AIDER_PID
+
+wait $AIDER_PID
+AIDER_STATUS=$?
+
+if [ $AIDER_STATUS -ne 0 ]; then
+    exit $AIDER_STATUS
 fi
 
 cd - >/dev/null 2>&1
