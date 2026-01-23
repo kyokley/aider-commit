@@ -1,3 +1,9 @@
+let
+  TEST_ENV_VARS = ''
+      export OLLAMA_HOST=localhost:8080
+      export OLLAMA_API_BASE=http://$OLLAMA_HOST
+  '';
+in
 {
   scripts = {
     test-setup.exec = ''
@@ -18,9 +24,8 @@
     '';
 
     test-nothing-to-commit.exec = ''
+      ${TEST_ENV_VARS}
       echo "Executing test-nothing-to-commit"
-      export OLLAMA_HOST=localhost:8080
-      export OLLAMA_API_BASE=http://$OLLAMA_HOST
 
       repo_dir=$(cat $DEVENV_ROOT/test_data)
       cd $repo_dir
@@ -34,9 +39,8 @@
 
     test-commit.exec = ''
       set -x
+      ${TEST_ENV_VARS}
       echo "Executing test-commit"
-      export OLLAMA_HOST=localhost:8080
-      export OLLAMA_API_BASE=http://$OLLAMA_HOST
 
       repo_dir=$(cat $DEVENV_ROOT/test_data)
       cd $repo_dir
@@ -54,34 +58,25 @@
         false
       fi
     '';
-  };
 
-  enterTest = ''
-    wait_for_port 8080
-    test-setup
-    test-nothing-to-commit
-    test-commit
-  '';
-
-  tasks = {
-    # "test:setup" = {
-    #   exec = ''
-    #     test-setup
-    #   '';
-    #   before = ["devenv:enterTest"];
-    #   showOutput = true;
-    # };
-    "test:cleanup" = {
-      exec = ''
+    test-cleanup.exec = ''
         echo "Executing cleanup"
         if [ -f $DEVENV_ROOT/test_data ]
         then
           repo_dir=$(cat $DEVENV_ROOT/test_data || echo "")
           rm -rf $repo_dir $DEVENV_ROOT/test_data >/dev/null 2>&1
         fi
-      '';
-      after = ["devenv:enterTest"];
-      showOutput = true;
-    };
+    '';
   };
+
+  enterTest = ''
+    ${TEST_ENV_VARS}
+
+    wait_for_port 8080
+    test-setup
+    test-nothing-to-commit
+    test-commit
+    test-cleanup
+  '';
+
 }

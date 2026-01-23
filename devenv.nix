@@ -39,36 +39,14 @@
           };
           response = {
             jsonBody = {
-              "model" = "<string>";
-              "created_at" = "<string>";
+              "model" = "gpt-oss";
+              "created_at" = "2026-01-22T21:40:00Z";
               "response" = "mock response";
-              "thinking" = "<string>";
               "done" = true;
-              "done_reason" = "<string>";
-              "total_duration" = 123;
-              "load_duration" = 123;
-              "prompt_eval_count" = 123;
-              "prompt_eval_duration" = 123;
-              "eval_count" = 123;
-              "eval_duration" = 123;
-              "logprobs" = [
-                {
-                  "token" = "<string>";
-                  "logprob" = 123;
-                  "bytes" = [
-                    123
-                  ];
-                  "top_logprobs" = [
-                    {
-                      "token" = "<string>";
-                      "logprob" = 123;
-                      "bytes" = [
-                        123
-                      ];
-                    }
-                  ];
-                }
-              ];
+              "total_duration" = 1500000000;
+              "load_duration" = 1200000;
+              "prompt_eval_count" = 12;
+              "eval_count" = 25;
             };
             status = 200;
           };
@@ -80,6 +58,19 @@
           };
           response = {
             jsonBody = {
+              "details" = {
+                "format" = "mxfp4";
+                "family" = "gptoss";
+                "families" = ["gptoss"];
+                "parameter_size" = "21B";
+                "quantization_level" = "MXFP4";
+              };
+              "model_info" = {
+                "general.architecture" = "gptoss";
+                "general.license" = "Apache-2.0";
+                "general.parameter_count" = 20900000000;
+                "general.quantization_version" = 1;
+              };
             };
             status = 200;
           };
@@ -91,10 +82,17 @@
           };
           response = {
             jsonBody = {
-              message = {
-                content = "mock response";
+              "model" = "gpt-oss";
+              "created_at" = "2026-01-22T22:15:00Z";
+              "message" = {
+                "role" = "assistant";
+                "content" = "mock response";
               };
-              done = true;
+              "done" = true;
+              "total_duration" = 1200000000;
+              "load_duration" = 1500000;
+              "prompt_eval_count" = 25;
+              "eval_count" = 18;
             };
             status = 200;
           };
