@@ -30,3 +30,17 @@ git-hooks.hooks.auto-commit-message.enable = true;
 - `AIDER_COMMIT_MODEL` - AI model passed to the `AIDER_COMMIT_CMD`. (default: `ollama_chat/gpt-oss`)
 ## Usage
 Write code and commit as usual
+
+### gitac Usage
+When installed through devenv, `Aider-Commit` provides a `gitac` command that allows for automated committing with AI-generated messages:
+
+```
+Usage: gitac [OPTIONS]
+
+Automatically commit changes with AI-generated commit messages.
+Options:
+- `-a, --all`    Run 'git add' before committing (adds all changes)
+- `-h, --help`   Show help message
+
+If no changes are staged, the script will exit.
+```

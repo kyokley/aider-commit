@@ -82,4 +82,79 @@ in
     test-cleanup
   '';
 
+
+  services = {
+    wiremock = {
+      enable = true;
+      verbose = true;
+      mappings = [
+        {
+          request = {
+            method = "GET";
+            url = "/api/generate";
+          };
+          response = {
+            jsonBody = {
+              "model" = "gpt-oss";
+              "created_at" = "2026-01-22T21:40:00Z";
+              "response" = "mock response";
+              "done" = true;
+              "total_duration" = 1500000000;
+              "load_duration" = 1200000;
+              "prompt_eval_count" = 12;
+              "eval_count" = 25;
+            };
+            status = 200;
+          };
+        }
+        {
+          request = {
+            method = "POST";
+            url = "/api/show";
+          };
+          response = {
+            jsonBody = {
+              "details" = {
+                "format" = "mxfp4";
+                "family" = "gptoss";
+                "families" = ["gptoss"];
+                "parameter_size" = "21B";
+                "quantization_level" = "MXFP4";
+              };
+              "model_info" = {
+                "general.architecture" = "gptoss";
+                "general.license" = "Apache-2.0";
+                "general.parameter_count" = 20900000000;
+                "general.quantization_version" = 1;
+              };
+            };
+            status = 200;
+          };
+        }
+        {
+          request = {
+            method = "POST";
+            url = "/api/chat";
+          };
+          response = {
+            jsonBody = {
+              "model" = "gpt-oss";
+              "created_at" = "2026-01-22T22:15:00Z";
+              "message" = {
+                "role" = "assistant";
+                "content" = "mock response";
+              };
+              "done" = true;
+              "total_duration" = 1200000000;
+              "load_duration" = 1500000;
+              "prompt_eval_count" = 25;
+              "eval_count" = 18;
+            };
+            status = 200;
+          };
+        }
+      ];
+    };
+  };
+
 }
