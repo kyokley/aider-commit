@@ -12,6 +12,25 @@
   scripts = {
     auto-commit-msg.exec = ./prepare-commit-msg;
     gitac.exec = ''
+     # Parse command line arguments
+     add_all=false
+     while [[ $# -gt 0 ]]; do
+         case $1 in
+             -a|--all)
+                 add_all=true
+                 shift
+                 ;;
+             *)
+                 shift
+                 ;;
+         esac
+     done
+
+     # Run git add if --all flag is provided
+     if [[ "$add_all" == true ]]; then
+         git add -u
+     fi
+
      # Exit immediately if there are no staged changes
      if [[ ! $(git diff --cached --name-only) ]]; then
          echo "Nothing to commit"

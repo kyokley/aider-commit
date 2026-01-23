@@ -61,7 +61,7 @@ show_spinner() {
     local i=0
     printf "Generating commit message"
     while kill -0 $1 2>/dev/null; do
-        printf "\rGenerating commit message %s" "${spin_chars:$((i % ${#spin_chars})):1}"
+        printf "\rGenerating commit message %s " "${spin_chars:$((i % ${#spin_chars})):1}"
         i=$((i + 1))
         sleep 0.1
     done
