@@ -52,7 +52,7 @@
       temp_commit_file=$(mktemp)
       touch ''${temp_commit_file}
 
-      if auto-commit-msg "''${temp_commit_file}" message
+      if aider-commit-msg "''${temp_commit_file}" message
       then
         git commit -F "''${temp_commit_file}"
       fi
