@@ -4,7 +4,7 @@
   inputs,
   ...
 }: {
-  imports = [./test.nix];
+  # imports = [./test.nix];
 
   packages = [ pkgs.git ];
 
