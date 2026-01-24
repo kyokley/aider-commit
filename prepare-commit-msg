@@ -8,17 +8,17 @@ if [[ ! $(git diff --cached --name-only) ]]; then
     exit 1
 fi
 
+# Exit immediately if a commit message already exists
+if [ -s "$1" ]; then
+    if [[ $(grep -v '^#' "$1" | grep -v "^\s*$") ]]; then
+        exit 0
+    fi
+fi
+
 # Exit immediately for merge commits
 if [ -n "$2" ] && [ "$2" = "merge" ] || git rev-parse --quiet --verify MERGE_HEAD >/dev/null 2>&1; then
     echo "Not a regular commit"
     exit 1
-fi
-
-# Exit immediately if a commit message already exists
-if [ -s "$1" ]; then
-    if [[ $(grep -v '^#' "$1" | grep -v "^\s*$") ]]; then
-        exit 1
-    fi
 fi
 
 : ${AIDER_COMMIT_CMD:=aider}
