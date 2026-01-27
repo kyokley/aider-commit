@@ -40,6 +40,7 @@
             wrapProgram $out/bin/aider-commit-msg \
               --set PATH ${lib.makeBinPath [
                 git
+                gnugrep
                 coreutils
                 aider-chat
               ]}
