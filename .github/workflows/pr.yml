@@ -1,0 +1,12 @@
+name: Test
+"on":
+  pull_request:
+jobs:
+  test:
+    name: Run nix flake checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+      - name: Install devenv.sh
+        run: nix flake check

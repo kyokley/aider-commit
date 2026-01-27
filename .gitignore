@@ -11,3 +11,5 @@ devenv.local.yaml
 .aider*
 
 test_data
+diff_file
+summary_file
