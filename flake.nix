@@ -1,5 +1,5 @@
 {
-  description = "A very basic flake";
+  description = "Aider-Commit Flake";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
@@ -7,14 +7,67 @@
 
   outputs = { self, nixpkgs }:
   let
-    system = "x86_64-linux";
-    pkgs = import nixpkgs {inherit system;};
+    lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+
+    # Generate a user-friendly version number.
+    version = builtins.substring 0 8 lastModifiedDate;
+
+    # System types to support.
+    supportedSystems = ["x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin"];
+
+    # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
+    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+
+    # Nixpkgs instantiated for supported system types.
+    nixpkgsFor = forAllSystems (system:
+      import nixpkgs {
+        inherit system;
+        overlays = [self.overlays.default];
+      });
   in
   {
-    checks.${system} = let
+    packages = forAllSystems (system: with nixpkgsFor.${system}; {
+      aider-commit-msg =
+        stdenv.mkDerivation {
+          name = "aider-commit-msg v${version}";
+          src = ./.;
+          nativeBuildInputs = [makeWrapper];
+          buildPhase = ":";
+          installPhase = ''
+            mkdir -p $out/bin
+
+            cp prepare-commit-msg $out/bin/aider-commit-msg
+            chmod +x $out/bin/aider-commit-msg
+            wrapProgram $out/bin/aider-commit-msg \
+              --set PATH ${lib.makeBinPath [
+                git
+                aider-chat
+              ]}
+          '';
+        };
+
+      gitac = stdenv.mkDerivation {
+        name = "gitac v${version}";
+        src = ./.;
+        nativeBuildInputs = [makeWrapper];
+        installPhase = ''
+          mkdir -p $out/bin
+
+          cp gitac $out/bin/gitac
+          chmod +x $out/bin/gitac
+          wrapProgram $out/bin/gitac \
+            --set PATH ${lib.makeBinPath [
+              git
+              self.packages.${system}.aider-commit-msg
+            ]}
+        '';
+      };
+    });
+
+    checks = let
       TEST_MODEL = "qwen:0.5b";
       TEST_OLLAMA_PORT = 11434;
-    in {
+    in forAllSystems (system: with nixpkgsFor.${system}; {
       test = pkgs.testers.runNixOSTest {
         name = "Aider-Commit Test";
         nodes = {
@@ -60,19 +113,6 @@
           client.execute("ls -l /root/src")
         '';
       };
-    };
-
-    # Override build machines for tests
-    nixConfig = {
-      buildMachines = [
-        {
-          hostName = "localhost";
-          system = "x86_64-linux";
-          maxJobs = 1;
-          speedFactor = 1;
-          supportedFeatures = [ "benchmark" "big-parallel" "nixos-test" ];
-        }
-      ];
-    };
+    });
   };
 }
