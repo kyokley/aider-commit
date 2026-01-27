@@ -22,7 +22,6 @@
     nixpkgsFor = forAllSystems (system:
       import nixpkgs {
         inherit system;
-        overlays = [self.overlays.default];
       });
   in
   {
@@ -41,6 +40,7 @@
             wrapProgram $out/bin/aider-commit-msg \
               --set PATH ${lib.makeBinPath [
                 git
+                coreutils
                 aider-chat
               ]}
           '';
@@ -58,6 +58,7 @@
           wrapProgram $out/bin/gitac \
             --set PATH ${lib.makeBinPath [
               git
+              coreutils
               self.packages.${system}.aider-commit-msg
             ]}
         '';
