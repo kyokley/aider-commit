@@ -31,7 +31,6 @@
           name = "aider-commit-msg v${version}";
           src = ./.;
           nativeBuildInputs = [makeWrapper];
-          buildPhase = ":";
           installPhase = ''
             mkdir -p $out/bin
 
@@ -66,26 +65,17 @@
       };
     });
 
-    checks = let
-      TEST_MODEL = "qwen:0.5b";
-      TEST_OLLAMA_PORT = 11434;
-    in forAllSystems (system: with nixpkgsFor.${system}; {
+    apps = forAllSystems (system: with nixpkgsFor.${system}; {
+      gitac = {
+        type = "app";
+        program = "${self.packages.${system}.gitac}/bin/gitac";
+      };
+    });
+
+    checks = forAllSystems (system: with nixpkgsFor.${system}; {
       test = testers.runNixOSTest {
         name = "Aider-Commit Test";
         nodes = {
-          server = {
-            virtualisation.memorySize = 4096;
-            services.ollama = {
-              enable = true;
-              host = "0.0.0.0";
-              loadModels = [
-                TEST_MODEL
-              ];
-            };
-            networking.firewall.allowedTCPPorts = [
-              TEST_OLLAMA_PORT
-            ];
-          };
           client = {
             environment = {
               systemPackages = [
@@ -95,21 +85,14 @@
                 aider-chat
                 ollama
               ];
-              variables = rec {
-                AIDER_COMMIT_MODEL = "ollama_chat/${TEST_MODEL}";
-                AIDER_COMMIT_PROMPT = "Respond to this prompt with 'test commit message'.";
-                AIDER_MODEL = AIDER_COMMIT_MODEL;
-                AIDER_SHOW_RELEASE_NOTES = "false";
-                OLLAMA_HOST = "server:${toString TEST_OLLAMA_PORT}";
-                OLLAMA_API_BASE = "http://${OLLAMA_HOST}";
+              variables = {
+                AIDER_COMMIT_MSG_OVERRIDE = "test commit message";
               };
             };
           };
         };
         testScript = ''
           start_all()
-
-          server.wait_for_open_port(11434)
 
           client.execute('git config --global user.email "test@user"')
           client.execute('git config --global user.name "Test User"')
@@ -121,19 +104,21 @@
             git commit -m "Initial commit"
           """)
 
-          client.wait_until_succeeds("ollama list | grep qwen")
-          server.wait_for_console_text("qwen:0.5b\s+success")
-
           status, stdout = client.execute("""
             cd /tmp/test-dir && \
             gitac
           """)
           assert stdout.strip() == "Nothing to commit"
 
-          status, stdout = client.execute("""
+          client.execute("""
             cd /tmp/test-dir && \
             echo 'print("foo")' > main.py && \
             gitac -a
+          """)
+
+          status, stdout = client.execute("""
+            cd /tmp/test-dir && \
+            git log -1 --pretty=%B
           """)
           assert "test commit message" in stdout.lower()
 
