@@ -70,6 +70,7 @@
         type = "app";
         program = "${self.packages.${system}.gitac}/bin/gitac";
       };
+      default = self.apps.${system}.gitac;
     });
 
     checks = forAllSystems (system: with nixpkgsFor.${system}; {
