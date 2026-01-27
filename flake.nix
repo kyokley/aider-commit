@@ -70,7 +70,7 @@
       TEST_MODEL = "qwen:0.5b";
       TEST_OLLAMA_PORT = 11434;
     in forAllSystems (system: with nixpkgsFor.${system}; {
-      test = pkgs.testers.runNixOSTest {
+      test = testers.runNixOSTest {
         name = "Aider-Commit Test";
         nodes = {
           server = {
@@ -89,12 +89,15 @@
           client = {
             environment = {
               systemPackages = [
-                pkgs.devenv
-                pkgs.aider-chat
-                pkgs.ollama
+                self.packages.${system}.gitac
+                git
+                devenv
+                aider-chat
+                ollama
               ];
               variables = rec {
                 AIDER_COMMIT_MODEL = "ollama_chat/${TEST_MODEL}";
+                AIDER_COMMIT_PROMPT = "Respond to this prompt with 'test commit message'.";
                 AIDER_MODEL = AIDER_COMMIT_MODEL;
                 AIDER_SHOW_RELEASE_NOTES = "false";
                 OLLAMA_HOST = "server:${toString TEST_OLLAMA_PORT}";
@@ -106,13 +109,34 @@
         testScript = ''
           start_all()
 
-          client.succeed("rm -rf /root/src")
-          client.copy_from_host("./.", "/root/src")
-
           server.wait_for_open_port(11434)
+
+          client.execute('git config --global user.email "test@user"')
+          client.execute('git config --global user.name "Test User"')
+          client.execute("git init /tmp/test-dir")
+          client.execute("""
+            cd /tmp/test-dir && \
+            echo 'print("hello world")' > main.py && \
+            git add . && \
+            git commit -m "Initial commit"
+          """)
+
           client.wait_until_succeeds("ollama list | grep qwen")
-          client.succeed("aider --message 'respond to this prompt with 'I understand' | grep -i 'I understand'")
-          client.execute("ls -l /root/src")
+          server.wait_for_console_text("qwen:0.5b\s+success")
+
+          status, stdout = client.execute("""
+            cd /tmp/test-dir && \
+            gitac
+          """)
+          assert stdout.strip() == "Nothing to commit"
+
+          status, stdout = client.execute("""
+            cd /tmp/test-dir && \
+            echo 'print("foo")' > main.py && \
+            gitac -a
+          """)
+          assert "test commit message" in stdout.lower()
+
         '';
       };
     });

@@ -26,17 +26,7 @@ fi
 : ${AIDER_COMMIT_DIFF_FILE:=diff_file}
 : ${AIDER_COMMIT_SUMMARY_FILE:=summary_file}
 : ${AIDER_COMMIT_TIMEOUT:=300}
-
-# Create temp directory to isolate the AI
-tmp_dir=$(mktemp -d)
-git init $tmp_dir >/dev/null 2>&1
-git diff --staged > "$tmp_dir/$AIDER_COMMIT_DIFF_FILE"
-
-branch=$(git rev-parse --abbrev-ref HEAD)
-
-cd $tmp_dir >/dev/null 2>&1
-
-AIDER_COMMIT_PROMPT="
+: ${AIDER_COMMIT_PROMPT="
   DO NOT MODIFY ANY EXISTING FILES.
   DO NOT MODIFY prepare-commit-msg!
   DO NOT REPEAT THE REQUEST.
@@ -52,8 +42,26 @@ AIDER_COMMIT_PROMPT="
   Focus on high level actions, avoiding repetition of file summaries.  Return no more than five bullet points.
   Leave an empty line between the single line summary and the rest of the bullet points.
   Only output the summary table without repeating what was requested.
+"
+
+_AIDER_COMMIT_PROMPT_FOOTER="
   Write summary to a file named '${AIDER_COMMIT_SUMMARY_FILE}'.
 "
+
+_AIDER_COMMIT_FULL_PROMPT="
+  ${AIDER_COMMIT_PROMPT}
+
+  ${_AIDER_COMMIT_PROMPT_FOOTER}
+"
+
+# Create temp directory to isolate the AI
+tmp_dir=$(mktemp -d)
+git init $tmp_dir >/dev/null 2>&1
+git diff --staged > "$tmp_dir/$AIDER_COMMIT_DIFF_FILE"
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+cd $tmp_dir >/dev/null 2>&1
 
 # Function to display braille spinner
 show_spinner() {
@@ -71,7 +79,7 @@ show_spinner() {
 }
 
 # Run aider command with spinner
-timeout --preserve-status ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --yes --no-git --model ${AIDER_COMMIT_MODEL} --message "${AIDER_COMMIT_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE} >/dev/null 2>&1 &
+timeout --preserve-status ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --yes --no-git --model ${AIDER_COMMIT_MODEL} --message "${_AIDER_COMMIT_FULL_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE} >/dev/null 2>&1 &
 
 # Get the PID of the last background process
 AIDER_PID=$!
