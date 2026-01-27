@@ -3,7 +3,7 @@ Use [Aider](https://aider.chat/) to automatically generate git commit messages. 
 ## Requirements
 Be sure to already have [Aider](https://aider.chat/) installed.
 ## Installation
-There are a couple of different ways to install `Aider-Commit`.
+There are a few different ways to install `Aider-Commit`.
 
 ### Option 1. Directly in .git/hooks
 Copy `prepare-commit-msg` to .git/hooks in whatever git repo you'd like to use the plugin in. Be sure to make the script executable with `chmod +x prepare-commit-msg`
@@ -23,6 +23,11 @@ imports:
 2. Enable the hook in devenv.nix
 ```
 git-hooks.hooks.auto-commit-message.enable = true;
+```
+### Option 3. Standalone `gitac` with Nix
+Run:
+```
+nix run github:kyokley/aider-commit
 ```
 ## Configuration
 `Aider-Commit` makes the following environment variables available to allow overriding the default behavior of the git hook.
