@@ -3,6 +3,7 @@
 # Parse command line arguments
 add_all=false
 show_help=false
+dry_run=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         -a|--all)
@@ -11,6 +12,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -h|--help)
             show_help=true
+            shift
+            ;;
+        --dry-run)
+            dry_run=true
             shift
             ;;
         *)
@@ -25,8 +30,9 @@ if [[ "$show_help" == true ]]; then
     echo "Automatically commit changes with AI-generated commit messages."
     echo ""
     echo "Options:"
-    echo "  -a, --all    Run 'git add' before committing (adds all changes)"
-    echo "  -h, --help   Show this help message"
+    echo "  -a, --all      Run 'git add' before committing (adds all changes)"
+    echo "  --dry-run      Generate commit message but do not run 'git commit'"
+    echo "  -h, --help     Show this help message"
     echo ""
     echo "If no changes are staged, the script will exit."
     exit 0
@@ -37,12 +43,16 @@ if [[ "$add_all" == true ]]; then
     git add .
 fi
 
-temp_commit_file=$(mktemp)
-touch ${temp_commit_file}
+commit_file=$(mktemp)
+touch ${commit_file}
 
-if aider-commit-msg "${temp_commit_file}" message
+if aider-commit-msg "${commit_file}" message
 then
-  git commit -F "${temp_commit_file}"
+  if [[ "$dry_run" != true ]]; then
+    git commit -F "${commit_file}"
+  else
+    cat "${commit_file}"
+  fi
 fi
 
-rm -f "${temp_commit_file}"
+rm -f "${commit_file}"

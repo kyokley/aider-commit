@@ -37,7 +37,7 @@
             cp prepare-commit-msg $out/bin/aider-commit-msg
             chmod +x $out/bin/aider-commit-msg
             wrapProgram $out/bin/aider-commit-msg \
-              --set PATH ${lib.makeBinPath [
+              --prefix PATH : ${lib.makeBinPath [
                 git
                 gnugrep
                 coreutils
@@ -56,7 +56,7 @@
           cp gitac $out/bin/gitac
           chmod +x $out/bin/gitac
           wrapProgram $out/bin/gitac \
-            --set PATH ${lib.makeBinPath [
+            --prefix PATH : ${lib.makeBinPath [
               git
               coreutils
               self.packages.${system}.aider-commit-msg

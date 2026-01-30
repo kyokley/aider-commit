@@ -28,7 +28,7 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 : ${AIDER_COMMIT_DIFF_FILE:=diff_file}
 : ${AIDER_COMMIT_SUMMARY_FILE:=summary_file}
 : ${AIDER_COMMIT_TIMEOUT:=300}
-: ${AIDER_COMMIT_PROMPT="
+: ${AIDER_COMMIT_PROMPT:="
   DO NOT MODIFY ANY EXISTING FILES.
   DO NOT MODIFY prepare-commit-msg!
   DO NOT REPEAT THE REQUEST.
@@ -57,18 +57,18 @@ _AIDER_COMMIT_FULL_PROMPT="
 "
 
 # Create temp directory to isolate the AI
-tmp_dir=$(mktemp -d)
-git init $tmp_dir >/dev/null 2>&1
-git diff --staged > "$tmp_dir/$AIDER_COMMIT_DIFF_FILE"
+work_dir=$(mktemp -d)
+git init $work_dir >/dev/null 2>&1
+git diff --staged > "$work_dir/$AIDER_COMMIT_DIFF_FILE"
 
-cd $tmp_dir >/dev/null 2>&1
+cd $work_dir >/dev/null 2>&1
 
 # Function to display braille spinner
 show_spinner() {
     local spin_chars="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
     local i=0
     printf "Generating commit message"
-    while kill -0 $1 2>/dev/null; do
+    while ps -p "$1" >/dev/null 2>&1; do
         printf "\rGenerating commit message %s " "${spin_chars:$((i % ${#spin_chars})):1}"
         i=$((i + 1))
         sleep 0.1
@@ -103,6 +103,6 @@ fi
 cd - >/dev/null 2>&1
 
 tmp_output=$(mktemp)
-cat "$tmp_dir/${AIDER_COMMIT_SUMMARY_FILE}" "$1" > "$tmp_output" && mv "$tmp_output" "$1"
+cat "$work_dir/${AIDER_COMMIT_SUMMARY_FILE}" "$1" > "$tmp_output" && mv "$tmp_output" "$1"
 
-rm -r "$tmp_dir"
+rm -r "$work_dir"
