@@ -43,6 +43,10 @@ if [[ "$add_all" == true ]]; then
     git add .
 fi
 
+if [[ "$dry_run" == true ]]; then
+    echo -e "\033[33mDRY RUN:\033[0m"
+fi
+
 commit_file=$(mktemp)
 touch ${commit_file}
 
@@ -51,6 +55,7 @@ then
   if [[ "$dry_run" != true ]]; then
     git commit -F "${commit_file}"
   else
+    echo -e "\033[33mDry run: No changes will be made. Commit message would be:\033[0m"
     cat "${commit_file}"
   fi
 fi
