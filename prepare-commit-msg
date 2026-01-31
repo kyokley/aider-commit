@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 # Exit immediately if a commit message already exists
 if [ -s "$1" ]; then
     if [[ $(grep -v '^#' "$1" | grep -v "^\s*$") ]]; then
@@ -73,9 +71,6 @@ show_spinner() {
         i=$((i + 1))
         sleep 0.1
     done
-    printf "\rCommit message generation complete! 🎉"
-    echo
-    echo
 }
 
 # To support testing, allow overriding the message returned from AI
@@ -83,7 +78,6 @@ if [[ -n "${AIDER_COMMIT_MSG_OVERRIDE}" ]]
 then
     echo "${AIDER_COMMIT_MSG_OVERRIDE}" > "${AIDER_COMMIT_SUMMARY_FILE}"
 else
-    # Run aider command with spinner
     timeout --preserve-status ${AIDER_COMMIT_TIMEOUT} ${AIDER_COMMIT_CMD} --yes --no-git --model ${AIDER_COMMIT_MODEL} --message "${_AIDER_COMMIT_FULL_PROMPT}" ${AIDER_COMMIT_DIFF_FILE} ${AIDER_COMMIT_SUMMARY_FILE} >/dev/null 2>&1 &
 fi
 
@@ -97,8 +91,14 @@ wait $AIDER_PID
 AIDER_STATUS=$?
 
 if [ $AIDER_STATUS -ne 0 ]; then
+    printf "\rCommit message generation failed ❌"
+    echo
     exit $AIDER_STATUS
 fi
+
+printf "\rCommit message generation complete! 🎉"
+echo
+echo
 
 cd - >/dev/null 2>&1
 
