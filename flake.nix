@@ -82,9 +82,6 @@
               systemPackages = [
                 self.packages.${system}.gitac
                 git
-                devenv
-                aider-chat
-                ollama
               ];
               variables = {
                 AIDER_COMMIT_MSG_OVERRIDE = "test commit message";
