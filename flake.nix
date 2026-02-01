@@ -74,7 +74,7 @@
     });
 
     checks = forAllSystems (system: with nixpkgsFor.${system}; {
-      test = testers.runNixOSTest {
+      unit-test = testers.runNixOSTest {
         name = "Aider-Commit Test";
         nodes = {
           client = {
@@ -96,30 +96,98 @@
           client.execute('git config --global user.name "Test User"')
           client.execute("git init /tmp/test-dir")
           client.execute("""
-            cd /tmp/test-dir && \
-            echo 'print("hello world")' > main.py && \
-            git add . && \
+            cd /tmp/test-dir &&
+            echo 'print("hello world")' > main.py &&
+            git add . &&
             git commit -m "Initial commit"
           """)
 
           status, stdout = client.execute("""
-            cd /tmp/test-dir && \
+            cd /tmp/test-dir &&
             gitac
           """)
           assert stdout.strip() == "Nothing to commit"
 
           client.execute("""
-            cd /tmp/test-dir && \
-            echo 'print("foo")' > main.py && \
+            cd /tmp/test-dir &&
+            echo 'print("foo")' > main.py &&
             gitac -a
           """)
 
           status, stdout = client.execute("""
-            cd /tmp/test-dir && \
+            cd /tmp/test-dir &&
             git log -1 --pretty=%B
           """)
           assert "test commit message" in stdout.lower()
 
+        '';
+      };
+
+      functional-test = let
+            ai_model = "qwen3:0.6b";
+          in testers.runNixOSTest {
+        name = "AI Test";
+        nodes = {
+          machine = {
+            virtualisation.memorySize = 4096;
+
+            # Ollama server setup
+            services.ollama = {
+              enable = true;
+              loadModels = [
+                ai_model
+              ];
+            };
+
+            environment = {
+              systemPackages = [
+                pkgs.ollama-vulkan
+                pkgs.git
+                self.packages.${system}.gitac
+              ];
+              variables = {
+                AIDER_COMMIT_CMD = "aider";
+                AIDER_COMMIT_MODEL = "ollama_chat/${ai_model}";
+              };
+            };
+          };
+        };
+        testScript = let
+          test_dir = "/tmp/test_dir";
+        in ''
+          start_all()
+
+          # Configure git identity for commits in the test VM
+          machine.succeed('git config --global user.email "test@example.com"')
+          machine.succeed('git config --global user.name "Test User"')
+
+          machine.succeed("""
+            git init ${test_dir} &&
+            cd ${test_dir} &&
+            touch file1 file2 file3 &&
+            git add . &&
+            git commit -am 'Initial Commit'""")
+
+          machine.wait_for_open_port(11434)
+          machine.wait_for_console_text("${ai_model}\s+success")
+
+          # out = machine.execute("""cd ${test_dir} && echo "print('hello world')" > hello.py && gitac -a --dry-run""")
+          # print(out)
+
+          # out = machine.execute("""cd ${test_dir} && git status""")
+          # print(out)
+
+          status, out = machine.execute("""cd ${test_dir} && echo "print('hello world')" > hello.py && gitac -a""")
+          print(out)
+
+          status, out = machine.execute("""cd ${test_dir} && git status""")
+          print(out)
+
+          status, out = machine.execute("""cd ${test_dir} && git log -1 --pretty=%B""")
+          print(out)
+
+          status, out = machine.execute("""cd ${test_dir} && cat hello.py""")
+          print(out)
         '';
       };
     });
