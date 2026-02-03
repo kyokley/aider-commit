@@ -124,12 +124,22 @@
       };
 
       functional-test = let
-            ai_model = "qwen3:0.6b";
+            # ai_model = "qwen3:0.6b";
+            ai_model = "llama3.2:3b";
+            source = builtins.fetchGit {
+              url = "https://github.com/kyokley/aider-commit";
+              rev = "e5df3090ebf2fe8a75fa83894bc14e0620bc8508";
+            };
+            test_dir = "/tmp/test_dir";
           in testers.runNixOSTest {
         name = "AI Test";
         nodes = {
           machine = {
-            virtualisation.memorySize = 4096;
+            virtualisation = {
+              memorySize = 12 * 1024;
+              diskSize = 20 * 1024;
+              qemu.options = ["-device virtio-gpu-pci"];
+            };
 
             # Ollama server setup
             services.ollama = {
@@ -140,53 +150,47 @@
             };
 
             environment = {
+              etc."test_dir".source = source;
               systemPackages = [
-                pkgs.ollama-vulkan
+                pkgs.ollama-rocm
                 pkgs.git
                 self.packages.${system}.gitac
               ];
               variables = {
                 AIDER_COMMIT_CMD = "aider";
                 AIDER_COMMIT_MODEL = "ollama_chat/${ai_model}";
+                AIDER_COMMIT_TIMEOUT = "600";
               };
             };
           };
         };
-        testScript = let
-          test_dir = "/tmp/test_dir";
-        in ''
+        testScript = ''
           start_all()
+
+          # machine.execute("git clone https://github.com/kyokley/aider-commit.git ${test_dir}")
 
           # Configure git identity for commits in the test VM
           machine.succeed('git config --global user.email "test@example.com"')
           machine.succeed('git config --global user.name "Test User"')
+          machine.succeed('cp -Lrv /etc/test_dir ${test_dir} && git init ${test_dir} && cd ${test_dir} && git add devenv.* flake.* && git commit -m "Initial commit"')
 
-          machine.succeed("""
-            git init ${test_dir} &&
-            cd ${test_dir} &&
-            touch file1 file2 file3 &&
-            git add . &&
-            git commit -am 'Initial Commit'""")
+          # machine.succeed("""
+          #   git init ${test_dir} &&
+          #   cd ${test_dir} &&
+          #   touch file1 file2 file3 &&
+          #   git add . &&
+          #   git commit -am 'Initial Commit'""")
 
           machine.wait_for_open_port(11434)
           machine.wait_for_console_text("${ai_model}\s+success")
 
-          # out = machine.execute("""cd ${test_dir} && echo "print('hello world')" > hello.py && gitac -a --dry-run""")
-          # print(out)
-
-          # out = machine.execute("""cd ${test_dir} && git status""")
-          # print(out)
-
-          status, out = machine.execute("""cd ${test_dir} && echo "print('hello world')" > hello.py && gitac -a""")
+          status, out = machine.execute("""cd ${test_dir} && echo 'Begin processing' && gitac -a""")
           print(out)
 
           status, out = machine.execute("""cd ${test_dir} && git status""")
           print(out)
 
           status, out = machine.execute("""cd ${test_dir} && git log -1 --pretty=%B""")
-          print(out)
-
-          status, out = machine.execute("""cd ${test_dir} && cat hello.py""")
           print(out)
         '';
       };
