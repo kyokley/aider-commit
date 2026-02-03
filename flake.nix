@@ -138,7 +138,8 @@
             virtualisation = {
               memorySize = 12 * 1024;
               diskSize = 20 * 1024;
-              qemu.options = ["-device virtio-gpu-pci"];
+              # Enable GPU passthrough
+              graphics = true;
             };
 
             # Ollama server setup
