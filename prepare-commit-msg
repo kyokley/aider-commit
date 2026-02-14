@@ -65,9 +65,9 @@ cd $work_dir >/dev/null 2>&1
 show_spinner() {
     local spin_chars="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
     local i=0
-    printf "Generating commit message"
+    printf "Generating commit message (using ${AIDER_COMMIT_MODEL})"
     while ps -p "$1" >/dev/null 2>&1; do
-        printf "\rGenerating commit message %s " "${spin_chars:$((i % ${#spin_chars})):1}"
+        printf "\rGenerating commit message (using ${AIDER_COMMIT_MODEL}) %s " "${spin_chars:$((i % ${#spin_chars})):1}"
         i=$((i + 1))
         sleep 0.1
     done
@@ -91,12 +91,12 @@ wait $AIDER_PID
 AIDER_STATUS=$?
 
 if [ $AIDER_STATUS -ne 0 ]; then
-    printf "\rCommit message generation failed ❌"
+    printf "\rCommit message generation (using ${AIDER_COMMIT_MODEL}) failed ❌"
     echo
     exit $AIDER_STATUS
 fi
 
-printf "\rCommit message generation complete! 🎉"
+printf "\rCommit message generation (using ${AIDER_COMMIT_MODEL}) complete! 🎉"
 echo
 echo
 
